@@ -1,0 +1,97 @@
+- name: Init server
+  hosts: all
+  remote_user: root
+
+  tasks:
+    - name: Add deploy SSH key
+      authorized_key:
+        user: root
+        state: present
+        manage_dir: yes
+        key: "{{ lookup('file', './ssh/deploy.pub') }}"
+
+    - name: Upgrade the OS
+      apt:
+        update_cache: yes
+        upgrade: dist
+        autoremove: yes
+
+    - name: Install apache2-utils for "htpasswd" command
+      apt:
+        name: apache2-utils
+
+    - name: Install ca-certificates, curl, gnupg and lsb-release for Docker
+      apt:
+        name:
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+
+    - name: Create /etc/apt/keyrings directory
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+
+    - name: Add GIT stable repository from PPA
+      apt_repository:
+        repo: ppa:git-core/ppa
+
+    - name: Install git
+      apt:
+        name: git
+
+    - name: State check
+      stat: path=/etc/apt/trusted.gpg
+      register: stat
+
+    - name: Move GIT GPG key from trusted.gpg to trusted.gpg.d/
+      copy:
+        remote_src: yes
+        src: /etc/apt/trusted.gpg
+        dest: /etc/apt/trusted.gpg.d/git.gpg
+      when: stat.stat.exists
+
+    - name: Add Docker GPG key
+      shell: 'curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --yes --dearmor -o /etc/apt/keyrings/docker.gpg'
+
+    - name: Add Docker repository
+      shell: 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null'
+
+    - name: Install Docker
+      apt:
+        name:
+          - containerd.io
+          - docker-compose-plugin
+          - docker-ce-cli
+          - docker-ce
+        state: latest
+        update_cache: yes
+
+    - name: Restart systemd-networkd service
+      service:
+        name: systemd-networkd
+        state: restarted
+
+    - name: Appending the group 'docker' to the root
+      user:
+        name: root
+        shell: /bin/bash
+        groups: docker
+        append: yes
+
+    - name: Copy SSHD config
+      copy:
+        src: ./sshd/key.conf
+        dest: /etc/ssh/sshd_config.d/key.conf
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Restart ssh service
+      service:
+        name: ssh
+        state: restarted
+
+    - name: Create Docker traefik network
+      shell: docker network create traefik || true
