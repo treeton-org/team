@@ -1,0 +1,88 @@
+version: "3.9"
+services:
+  #############
+  ## Traefik ##
+  #############
+  traefik:
+    image: traefik:v2.9.8
+    container_name: traefik
+    restart: always
+    networks:
+      - traefik
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./docker/traefik/traefik.yaml:/etc/traefik/traefik.yaml:ro
+      - ./docker/traefik/provider.yaml:/etc/traefik/provider.yaml:ro
+      - ./.htpasswd:/etc/.htpasswd
+      - traefik-acme:/etc/traefik/acme
+      - traefik-log:/var/log/traefik
+    command:
+      - "--certificatesResolvers.letsEncrypt.acme.email=${TRAEFIL_ACME_EMAIL}"
+    labels:
+      - traefik.enable=true
+
+      - traefik.http.routers.traefik.rule=Host(`${TRAEFIK_DOMAIN}`)
+      - traefik.http.routers.traefik.service=api@internal
+      - traefik.http.routers.traefik.middlewares=auth@file
+      - traefik.http.routers.traefik.entryPoints=web
+
+      - traefik.http.routers.traefikSecure.rule=Host(`${TRAEFIK_DOMAIN}`)
+      - traefik.http.routers.traefikSecure.service=api@internal
+      - traefik.http.routers.traefikSecure.middlewares=auth@file
+      - traefik.http.routers.traefikSecure.entryPoints=webSecure
+      - traefik.http.routers.traefikSecure.tls.certResolver=letsEncrypt
+
+      - traefik.http.routers.traefikPrometheus.rule=Host(`${TRAEFIK_METRICS_DOMAIN}`)
+      - traefik.http.routers.traefikPrometheus.service=prometheus@internal
+      - traefik.http.routers.traefikPrometheus.entryPoints=web
+
+      - traefik.http.routers.traefikPrometheusSecure.rule=Host(`${TRAEFIK_METRICS_DOMAIN}`)
+      - traefik.http.routers.traefikPrometheusSecure.service=prometheus@internal
+      - traefik.http.routers.traefikPrometheusSecure.entryPoints=webSecure
+      - traefik.http.routers.traefikPrometheusSecure.tls.certResolver=letsEncrypt
+
+      - traefik.http.services.traefik.loadbalancer.server.port=8082
+
+
+  #############
+  ## Grafana ##
+  #############
+  tempo:
+    image: grafana/tempo:1.5.0
+    container_name: tempo
+    restart: always
+    command:
+      - "-config.file=/etc/tempo.yaml"
+    networks:
+      - traefik
+      - tempo
+    volumes:
+      - ./docker/tempo/tempo.yaml:/etc/tempo.yaml:ro
+      - tempo:/tmp/tempo
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.tempo.rule=Host(`${TEMPO_DOMAIN}`)
+      - traefik.http.routers.tempo.service=tempo
+      - traefik.http.routers.tempo.entryPoints=web
+
+      - traefik.http.routers.tempoSecure.rule=Host(`${TEMPO_DOMAIN}`)
+      - traefik.http.routers.tempoSecure.service=tempo
+      - traefik.http.routers.tempoSecure.entryPoints=webSecure
+      - traefik.http.routers.tempoSecure.tls.certResolver=letsEncrypt
+
+      - traefik.http.services.tempo.loadbalancer.server.port=3200
+
+
+networks:
+  traefik:
+    external: true
+    name: traefik
+  tempo:
+
+volumes:
+  traefik-acme:
+  traefik-log:
+  tempo:

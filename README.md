@@ -7,3 +7,9 @@
 ```shell
 ansible-playbook -i playbook/inventory/all.yaml playbook/init.yaml
 ```
+
+## Up local
+```shell
+docker network create traefik
+docker compose --env-file .env.local up
+```
