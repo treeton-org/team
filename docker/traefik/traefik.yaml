@@ -32,9 +32,9 @@ providers:
 # HTTPS redirection (80 to 443)
 # @see https://doc.traefik.io/traefik/routing/entrypoints
 entryPoints:
-  web:
+  http:
     address: :80
-  webSecure:
+  https:
     address: :443
   metrics:
     address: :8082
