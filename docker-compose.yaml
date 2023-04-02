@@ -47,6 +47,82 @@ services:
       - traefik.http.services.traefik.loadbalancer.server.port=8082
 
 
+  ################
+  ## Focalboard ##
+  ################
+  focalboard:
+    image: mattermost/focalboard:7.8.0
+    container_name: focalboard
+    restart: always
+    networks:
+      - traefik
+      - focalboard
+    volumes:
+      - ./docker/focalboard/config.json:/opt/focalboard/config.json:ro
+      - focalboard:/opt/focalboard/data
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.focalboard.rule=Host(`${FOCALBOARD_DOMAIN}`)
+      - traefik.http.routers.focalboard.service=focalboard
+      - traefik.http.routers.focalboard.entryPoints=http
+
+      - traefik.http.routers.focalboardHttps.rule=Host(`${FOCALBOARD_DOMAIN}`)
+      - traefik.http.routers.focalboardHttps.service=focalboard
+      - traefik.http.routers.focalboardHttps.entryPoints=https
+      - traefik.http.routers.focalboardHttps.tls.certResolver=letsEncrypt
+
+      - traefik.http.services.focalboard.loadbalancer.server.port=8000
+
+      - traefik.http.routers.focalboardMetrics.rule=Host(`${FOCALBOARD_METRICS_DOMAIN}`)
+      - traefik.http.routers.focalboardMetrics.service=focalboardMetrics
+      - traefik.http.routers.focalboardMetrics.entryPoints=http
+
+      - traefik.http.routers.focalboardMetricsHttps.rule=Host(`${FOCALBOARD_METRICS_DOMAIN}`)
+      - traefik.http.routers.focalboardMetricsHttps.service=focalboardMetrics
+      - traefik.http.routers.focalboardMetricsHttps.entryPoints=https
+      - traefik.http.routers.focalboardMetricsHttps.tls.certResolver=letsEncrypt
+
+      - traefik.http.services.focalboardMetrics.loadbalancer.server.port=9092
+
+  focalboard-postgres:
+    image: postgres:15.2
+    container_name: focalboard-postgres
+    restart: always
+    networks:
+      - focalboard
+      - focalboard-postgres
+    volumes:
+      - focalboard-postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=focalboard
+      - POSTGRES_PASSWORD=focalboard
+      - POSTGRES_DB=boards
+
+  focalboard-postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.11.1
+    container_name: focalboard-postgres-exporter
+    restart: always
+    networks:
+      - traefik
+      - focalboard-postgres
+      - focalboard-postgres-exporter
+    environment:
+      - DATA_SOURCE_NAME=postgresql://focalboard:focalboard@focalboard-postgres:5432/boards?sslmode=disable
+    labels:
+      - traefik.enable=true
+
+      - traefik.http.routers.focalboardPostgresExporter.rule=Host(`${FOCALBOARD_POSTGRES_EXPORTER_DOMAIN}`)
+      - traefik.http.routers.focalboardPostgresExporter.service=focalboardPostgresExporter
+      - traefik.http.routers.focalboardPostgresExporter.entryPoints=http
+
+      - traefik.http.routers.focalboardPostgresExporterHttps.rule=Host(`${FOCALBOARD_POSTGRES_EXPORTER_DOMAIN}`)
+      - traefik.http.routers.focalboardPostgresExporterHttps.service=focalboardPostgresExporter
+      - traefik.http.routers.focalboardPostgresExporterHttps.entryPoints=https
+      - traefik.http.routers.focalboardPostgresExporterHttps.tls.certResolver=letsEncrypt
+
+      - traefik.http.services.focalboardPostgresExporter.loadbalancer.server.port=9187
+
+
   #############
   ## Grafana ##
   #############
@@ -80,9 +156,14 @@ networks:
   traefik:
     external: true
     name: traefik
+  focalboard:
+  focalboard-postgres:
+  focalboard-postgres-exporter:
   tempo:
 
 volumes:
   traefik-acme:
   traefik-log:
+  focalboard:
+  focalboard-postgres:
   tempo:

@@ -21,7 +21,19 @@ docker compose --env-file .env.local up
 flowchart TD
     %% Traefik
     traefik(traefik)-->|traefik|tempo(tempo)
+    traefik(traefik)-->|traefik|focalboard(focalboard)
+    traefik(traefik)-->|traefik|focalboard-postgres-exporter(focalboard-postgres-exporter)
     
+    %% Focalboard
+    focalboard(focalboard)-->|focalboard|focalboard-postgres(focalboard-postgres)
+    focalboard-postgres(focalboard-postgres)-->|focalboard-postgres|focalboard-postgres-exporter(focalboard-postgres-exporter)
+
+subgraph Focalboard
+    focalboard(focalboard)
+    focalboard-postgres(focalboard-postgres)
+    focalboard-postgres-exporter(focalboard-postgres-exporter)
+end
+
 subgraph Grafana
     tempo(tempo)
 end
