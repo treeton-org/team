@@ -13,6 +13,7 @@
   "localOnly": false,
   "enableLocalMode": false,
   "localModeSocketLocation": "/var/tmp/focalboard_local.socket",
+  "authMode": "native",
   "enablePublicSharedBoards": true
 }
 
