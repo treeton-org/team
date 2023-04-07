@@ -134,7 +134,6 @@ services:
       - "-config.file=/etc/tempo.yaml"
     networks:
       - traefik
-      - tempo
     volumes:
       - ./docker/tempo/tempo.yaml:/etc/tempo.yaml:ro
       - tempo:/tmp/tempo
@@ -159,7 +158,6 @@ networks:
   focalboard:
   focalboard-postgres:
   focalboard-postgres-exporter:
-  tempo:
 
 volumes:
   traefik-acme:
