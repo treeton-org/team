@@ -25,7 +25,7 @@ docker compose --env-file .env.local up
 
 ### Run GitHub action manually
 
-[Deploy action](https://github.com/treeton-org/team/actions/workflows/deploy.yml)
+[Deploy action](https://github.com/treeton-org/team/actions/workflows/deploy.yaml)
 
 ## Docker network scheme
 
