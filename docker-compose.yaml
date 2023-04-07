@@ -76,10 +76,12 @@ services:
       - traefik.http.services.focalboard.loadbalancer.server.port=8000
 
       - traefik.http.routers.focalboardMetrics.rule=Host(`${FOCALBOARD_METRICS_DOMAIN}`)
+      - traefik.http.routers.focalboardMetrics.middlewares=auth@file
       - traefik.http.routers.focalboardMetrics.service=focalboardMetrics
       - traefik.http.routers.focalboardMetrics.entryPoints=http
 
       - traefik.http.routers.focalboardMetricsHttps.rule=Host(`${FOCALBOARD_METRICS_DOMAIN}`)
+      - traefik.http.routers.focalboardMetricsHttps.middlewares=auth@file
       - traefik.http.routers.focalboardMetricsHttps.service=focalboardMetrics
       - traefik.http.routers.focalboardMetricsHttps.entryPoints=https
       - traefik.http.routers.focalboardMetricsHttps.tls.certResolver=letsEncrypt
