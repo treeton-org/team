@@ -37,10 +37,12 @@ services:
 
       - traefik.http.routers.traefikMetrics.rule=Host(`${TRAEFIK_METRICS_DOMAIN}`)
       - traefik.http.routers.traefikMetrics.service=prometheus@internal
+      - traefik.http.routers.traefikMetrics.middlewares=auth@file
       - traefik.http.routers.traefikMetrics.entryPoints=http
 
       - traefik.http.routers.traefikMetricsHttps.rule=Host(`${TRAEFIK_METRICS_DOMAIN}`)
       - traefik.http.routers.traefikMetricsHttps.service=prometheus@internal
+      - traefik.http.routers.traefikMetricsHttps.middlewares=auth@file
       - traefik.http.routers.traefikMetricsHttps.entryPoints=https
       - traefik.http.routers.traefikMetricsHttps.tls.certResolver=letsEncrypt
 
@@ -112,10 +114,12 @@ services:
       - traefik.enable=true
 
       - traefik.http.routers.focalboardPostgresExporter.rule=Host(`${FOCALBOARD_POSTGRES_EXPORTER_DOMAIN}`)
+      - traefik.http.routers.focalboardPostgresExporter.middlewares=auth@file
       - traefik.http.routers.focalboardPostgresExporter.service=focalboardPostgresExporter
       - traefik.http.routers.focalboardPostgresExporter.entryPoints=http
 
       - traefik.http.routers.focalboardPostgresExporterHttps.rule=Host(`${FOCALBOARD_POSTGRES_EXPORTER_DOMAIN}`)
+      - traefik.http.routers.focalboardPostgresExporterHttps.middlewares=auth@file
       - traefik.http.routers.focalboardPostgresExporterHttps.service=focalboardPostgresExporter
       - traefik.http.routers.focalboardPostgresExporterHttps.entryPoints=https
       - traefik.http.routers.focalboardPostgresExporterHttps.tls.certResolver=letsEncrypt
@@ -140,10 +144,12 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.tempo.rule=Host(`${TEMPO_DOMAIN}`)
+      - traefik.http.routers.tempo.middlewares=auth@file
       - traefik.http.routers.tempo.service=tempo
       - traefik.http.routers.tempo.entryPoints=http
 
       - traefik.http.routers.tempoHttps.rule=Host(`${TEMPO_DOMAIN}`)
+      - traefik.http.routers.tempoHttps.middlewares=auth@file
       - traefik.http.routers.tempoHttps.service=tempo
       - traefik.http.routers.tempoHttps.entryPoints=https
       - traefik.http.routers.tempoHttps.tls.certResolver=letsEncrypt
